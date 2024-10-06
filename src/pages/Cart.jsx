@@ -13,7 +13,7 @@ const Cart = () => {
     const fetchCartItems = async () => {
       try {
         // Fetch token from localStorage or cookies
-        const token = localStorage.getItem("token"); // Assuming you store the token in localStorage
+        const token = localStorage.getItem("authToken"); // Assuming you store the token in localStorage
 
         if (!token) {
           toast.error("You need to log in to view your cart.");
