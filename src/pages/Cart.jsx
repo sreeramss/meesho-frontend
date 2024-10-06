@@ -8,38 +8,68 @@ const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const navigate = useNavigate();
 
-  // Fetching data to show the cart details from the backend
+  // Fetching cart items from the backend with the JWT token
   useEffect(() => {
     const fetchCartItems = async () => {
       try {
-        const response = await axios.get("https://meesho-backend-xefg.onrender.com/api/cart", {
-          withCredentials: true, // This ensures cookies are sent
-        });
+        // Fetch token from localStorage or cookies
+        const token = localStorage.getItem("token"); // Assuming you store the token in localStorage
+
+        if (!token) {
+          toast.error("You need to log in to view your cart.");
+          navigate("/login"); // Redirect to login if not authenticated
+          return;
+        }
+
+        const response = await axios.get(
+          "https://meesho-backend-xefg.onrender.com/api/cart",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Add JWT token to the request header
+            },
+            withCredentials: true, // If using cookies for cross-origin requests
+          }
+        );
+
         setCartItems(response.data);
       } catch (error) {
         console.error("Error fetching cart items:", error);
         toast.error("Error fetching cart items");
+        if (error.response && error.response.status === 401) {
+          navigate("/login"); // Redirect to login on unauthorized error
+        }
       }
     };
 
     fetchCartItems();
-  }, []);
+  }, [navigate]);
 
-  // Remove function to delete the item from the cart using backend API
+  // Remove item from the cart using the backend API
   const handleRemove = async (productId) => {
     try {
-      await axios.delete(`https://meesho-backend-xefg.onrender.com/api/cart/${productId}`, {
-        withCredentials: true, // This ensures cookies are sent
-      });
+      const token = localStorage.getItem("token");
 
-      setCartItems(cartItems.filter((item) => item.productId._id !== productId)); // Fix: Compare using productId._id
+      await axios.delete(
+        `https://meesho-backend-xefg.onrender.com/api/cart/${productId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Add JWT token to the request header
+          },
+          withCredentials: true, // If using cookies for cross-origin requests
+        }
+      );
+
+      // Update cart items after removing
+      setCartItems(cartItems.filter((item) => item.productId._id !== productId));
+
       toast.success("Removed from Cart", {
         autoClose: 3000,
         hideProgressBar: true,
         className: "bg-green-600 text-white font-semibold",
       });
     } catch (error) {
-      toast.error(error.message, {
+      console.error("Error removing item:", error);
+      toast.error("Failed to remove item from cart", {
         autoClose: 3000,
         hideProgressBar: true,
         className: "bg-red-600 text-white font-semibold",
@@ -48,13 +78,13 @@ const Cart = () => {
   };
 
   const handleNavigate = () => {
-    navigate("/");
+    navigate("/"); // Navigate to the home page or product listing page
   };
 
   // Calculate total number of products and total price
   const totalProducts = cartItems.length;
   const totalPrice = cartItems.reduce(
-    (total, item) => total + item.productId.price * item.quantity, // Fix: Multiply by quantity
+    (total, item) => total + item.productId.price * item.quantity, // Multiply by quantity for accurate total
     0
   );
 
@@ -116,7 +146,7 @@ const Cart = () => {
             </button>
             <img
               src="https://images.meesho.com/images/marketing/1588578650850.webp"
-              alt=""
+              alt="Marketing Image"
             />
           </div>
         </div>
