@@ -30,7 +30,7 @@ const Navbar = () => {
       const token = localStorage.getItem("authToken")  
       const user = jwtDecode(token); // decode your token here         
       if (user) {
-        const response = await axios.get(`http://localhost:8080/api/user/${user.id}`); // Adjust endpoint as per your backend
+        const response = await axios.get(`https://meesho-backend-xefg.onrender.com/api/user/${user.id}`); // Adjust endpoint as per your backend
         setUserDetails(response.data)
       } else {
         setUserDetails(null);
